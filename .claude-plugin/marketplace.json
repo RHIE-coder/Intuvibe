@@ -1,0 +1,20 @@
+{
+  "name": "intuvibe",
+  "owner": {
+    "name": "RHIE MinHyung"
+  },
+  "metadata": {
+    "description": "Harness Framework for building AI agents and applications",
+    "version": "0.1.0",
+    "pluginRoot": "./packages"
+  },
+  "plugins": [
+    {
+      "name": "intuvibe-harness",
+      "source": "harness/plugin",
+      "description": "Agentic engineering harness for Claude Code",
+      "version": "0.1.0",
+      "strict": true
+    }
+  ]
+}
