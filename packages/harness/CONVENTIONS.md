@@ -34,11 +34,11 @@ book/ → PLAN.md → bench/ → plugin/ → git tag
 | ② 경로 수립 | `PLAN.md` | book/과 plugin/의 gap을 어떤 순서로 닫을지 적는다. 상태를 `active`로 전환 |
 | ③ 검증 정의 | `bench/` | **코드보다 먼저** 통과 기준을 정의: specs → tests → (scenarios). 테스트는 전부 실패 상태 |
 | ④ 구현 | `plugin/` | bench의 테스트를 통과시키는 코드를 작성. gap이 줄어든다 |
-| ⑤ 릴리즈 | git tag | gap = 0. plugin 메타데이터 version 올림 + `git tag vX.Y.Z` |
+| ⑤ 릴리즈 | git tag | gap = 0. plugin 메타데이터 version 올림. 마켓플레이스 `git tag vX.Y.Z` 반영 (루트 `README.md` 릴리스 이력 테이블 갱신) |
 
 **핵심:** book/이 목표이고, 개발은 plugin/이 book/을 따라잡는 과정이다. gap이 0이 되면 book/은 곧 현재 형상의 문서가 된다.
 
-**버전 간 변경 확인:** `git diff v0.0.1..v0.0.2 -- packages/harness/book/` — 이 diff가 곧 릴리즈 노트다.
+**버전 간 변경 확인:** `git diff v0.1.0..v0.2.0 -- packages/harness/book/` — 이 diff가 곧 릴리즈 노트다.
 
 ---
 

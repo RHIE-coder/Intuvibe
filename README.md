@@ -40,15 +40,8 @@ claude plugin marketplace remove intuvibe
 
 ## 버전 관리
 
-마켓플레이스 버전과 플러그인 버전은 독립적으로 관리한다.
-
-| 대상 | 위치 | 범프 시점 |
-|------|------|-----------|
-| 마켓플레이스 | `metadata.version` in `.claude-plugin/marketplace.json` | 플러그인 추가/제거, 메타데이터 구조 변경 |
-| 개별 플러그인 | `plugins[].version` + 각 `plugin.json` | 해당 플러그인 기능 변경 시 |
-
-- 마켓플레이스 버전은 "선반 자체의 변경"을 추적한다. 플러그인 내용 업데이트만으로는 올리지 않는다.
-- 플러그인 버전은 각 패키지가 독립적으로 관리한다. 릴리스 시 `git tag`로 표기한다 (예: `harness-v0.2.0`).
+`git tag`는 마켓플레이스 버전 단위로 관리한다 (예: `v0.1.0`).
+태그별 플러그인 버전 이력은 [RELEASES.md](RELEASES.md) 참고.
 
 ## 구조
 
