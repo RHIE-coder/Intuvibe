@@ -1,6 +1,6 @@
 {
   "name": "intuvibe-harness",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Agentic engineering harness — workflow, guardrails, quality pipeline for Claude Code",
   "author": {
     "name": "RHIE MinHyung",
