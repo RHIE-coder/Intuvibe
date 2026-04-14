@@ -1,7 +1,10 @@
 {
   "name": "intuvibe-harness",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Agentic engineering harness — workflow, guardrails, quality pipeline for Claude Code",
-  "author": "rhiemh",
+  "author": {
+    "name": "RHIE MinHyung",
+    "email": ""
+  },
   "main": "hooks/hooks.json"
 }

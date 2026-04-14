@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Harness Framework for building AI agents and applications",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "pluginRoot": "./packages"
   },
   "plugins": [
@@ -13,7 +13,7 @@
       "name": "intuvibe-harness",
       "source": "./packages/harness/plugin",
       "description": "Agentic engineering harness for Claude Code",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "strict": true
     }
   ]
