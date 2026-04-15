@@ -126,7 +126,7 @@ export function upcast(event) {
   },
   "features": {
     "auth/login": {
-      "phase": "implement",       // brainstorm|spec|architect|plan|implement|review|qa|deploy
+      "phase": "implement",       // brainstorm|scope|spec|architect|plan|implement|review|qa|deploy
       "gates_passed": {
         "g1_spec": true,
         "g2_plan": true,

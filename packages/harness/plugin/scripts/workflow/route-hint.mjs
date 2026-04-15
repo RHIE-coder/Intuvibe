@@ -28,6 +28,8 @@ function loadWorkflow() {
  */
 function nextSkill(phase, feature) {
   const transitions = {
+    brainstorm: { hint: '/harness:scope', reason: 'Brainstorm 완료 → Scope 정의 단계' },
+    scope: { hint: '/harness:spec', reason: 'Scope 완료 → Spec 작성 단계' },
     spec: { hint: '/harness:plan', reason: 'Spec 완료 → Plan 작성 단계' },
     architect: { hint: '/harness:plan', reason: 'Architecture 완료 → Plan 작성 단계' },
     plan: { hint: '/harness:implement', reason: 'Plan 완료 → 구현 단계' },

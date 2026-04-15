@@ -251,7 +251,7 @@ flowchart LR
     A1["packages/harness/dev/"] --> A2["packages/harness/bench/"] --> A3["packages/harness/plugin/"]
   end
   subgraph B["Domain B: User Project (Standard Mode)"]
-    B1["/harness:init"] --> B2["/harness:brainstorm"] --> B3["/harness:spec"] --> B4["/harness:architect"]
+    B1["/harness:init"] --> B2["/harness:brainstorm"] --> B2S["/harness:scope"] --> B3["/harness:spec"] --> B4["/harness:architect"]
     B4 --> B5["/harness:plan"] --> B6["Sprint Loop"]
     B6 --> B7["/harness:deploy"]
   end
@@ -287,7 +287,7 @@ flowchart LR
 
   <h3>6-Layer Architecture</h3>
   <div class="layer-stack">
-    <div class="layer l-ui"><span class="layer-num"></span><span class="layer-name">User Interface</span><span class="layer-desc">/harness:init /harness:brainstorm /harness:spec /harness:architect /harness:plan /harness:implement /harness:review /harness:qa /harness:deploy /harness:refactor ⟲ /harness:sync /harness:migrate</span></div>
+    <div class="layer l-ui"><span class="layer-num"></span><span class="layer-name">User Interface</span><span class="layer-desc">/harness:init /harness:brainstorm /harness:scope /harness:spec /harness:architect /harness:plan /harness:implement /harness:review /harness:qa /harness:deploy /harness:refactor ⟲ /harness:sync /harness:migrate</span></div>
     <div class="layer l6"><span class="layer-num">&#9317;</span><span class="layer-name">Config Layer</span><span class="layer-desc">&#8594; ②~⑤ 조절 가능. ① Safety는 건드릴 수 없음</span></div>
     <div class="layer l5"><span class="layer-num">&#9316;</span><span class="layer-name">Workflow Layer</span><span class="layer-desc">SDLC 오케스트레이션, 게이트 엔진, Right-Size Ceremony</span></div>
     <div class="layer l4"><span class="layer-num">&#9315;</span><span class="layer-name">Quality Layer</span><span class="layer-desc">프롬프트 품질, 불신 기반 리뷰, Confidence Calibration</span></div>
@@ -1204,12 +1204,12 @@ flowchart TB
 
   subgraph PIPE["Standard Pipeline (Domain B)"]
     direction LR
-    INIT["/init"] --> BRN["/brainstorm&lt;br/&gt;(large 권장)"] --> SPEC["/spec&lt;br/&gt;AC 도출"]
+    INIT["/init"] --> BRN["/brainstorm&lt;br/&gt;(large 권장)"] --> SCP["/scope&lt;br/&gt;Domain · Section"] --> SPEC["/spec&lt;br/&gt;AC 도출"]
     SPEC -->|"G1"| ARCH["/architect&lt;br/&gt;ADR (medium+ 필수)"]
     ARCH --> TS["Test Strategy&lt;br/&gt;AC → test cases"]
     TS -->|"G2"| PLAN["/plan&lt;br/&gt;step ↔ test 매핑"]
     PLAN -->|"G3"| SPRINT
-    subgraph SPRINT["Sprint Loop (Phase 6)"]
+    subgraph SPRINT["Sprint Loop (Phase 7)"]
       direction LR
       IMP["/implement&lt;br/&gt;worktree · TDD"] --> REV["/review&lt;br/&gt;구현자 ≠ 검증자"] --> QA["/qa&lt;br/&gt;9종 · stack attribution"]
       QA -->|"FAIL"| IMP
@@ -1250,7 +1250,7 @@ flowchart TB
   <p style="font-size:12px;color:var(--text2);margin-top:8px">
     <strong>읽는 법:</strong>
     <span style="color:var(--accent)">파란 테두리 Pipeline</span> = Standard 본류 &middot;
-    <span style="color:var(--accent2)">초록 Sprint Loop</span> = Phase 6 반복 구간 &middot;
+    <span style="color:var(--accent2)">초록 Sprint Loop</span> = Phase 7 반복 구간 &middot;
     <span style="color:var(--danger)">빨간 Hook Layer</span> = 모든 단계에 항상 작동(0 토큰) &middot;
     <span style="color:var(--purple)">보라 Right-Size</span> = spec 시 결정되어 architect/qa 행위를 자동 조절 &middot;
     <span style="color:var(--warn)">노랑 Prototype / Migrate</span> = Standard로 승격되는 재진입 경로 &middot;
@@ -1262,16 +1262,17 @@ flowchart TB
   <div class="flow">
     <div class="flow-step">Phase 0<br><strong>/harness:init</strong></div><span class="flow-arrow">&rarr;</span>
     <div class="flow-step">Phase 1<br><strong>/harness:brainstorm</strong></div><span class="flow-arrow">&rarr;</span>
-    <div class="flow-step highlight">Phase 2<br><strong>/harness:spec</strong></div><span class="flow-arrow">&rarr;</span>
-    <div class="flow-step">Phase 3<br><strong>/harness:architect</strong></div><span class="flow-arrow">&rarr;</span>
-    <div class="flow-step">Phase 4<br><strong>Test Strategy</strong></div><span class="flow-arrow">&rarr;</span>
-    <div class="flow-step highlight">Phase 5<br><strong>/harness:plan</strong></div><span class="flow-arrow">&rarr;</span>
-    <div class="flow-step sprint">Phase 6<br><strong>Sprint Loop</strong></div><span class="flow-arrow">&rarr;</span>
-    <div class="flow-step">Phase 7<br><strong>/harness:deploy</strong></div>
+    <div class="flow-step">Phase 2<br><strong>/harness:scope</strong></div><span class="flow-arrow">&rarr;</span>
+    <div class="flow-step highlight">Phase 3<br><strong>/harness:spec</strong></div><span class="flow-arrow">&rarr;</span>
+    <div class="flow-step">Phase 4<br><strong>/harness:architect</strong></div><span class="flow-arrow">&rarr;</span>
+    <div class="flow-step">Phase 5<br><strong>Test Strategy</strong></div><span class="flow-arrow">&rarr;</span>
+    <div class="flow-step highlight">Phase 6<br><strong>/harness:plan</strong></div><span class="flow-arrow">&rarr;</span>
+    <div class="flow-step sprint">Phase 7<br><strong>Sprint Loop</strong></div><span class="flow-arrow">&rarr;</span>
+    <div class="flow-step">Phase 8<br><strong>/harness:deploy</strong></div>
   </div>
-  <p style="font-size:12px;color:var(--text2)">Phase 2부터 게이트 강제. Phase 8: /harness:sync (코드 직접 수정 시). Phase 9: Iterate.</p>
+  <p style="font-size:12px;color:var(--text2)">Phase 3부터 게이트 강제. Phase 9: /harness:sync (코드 직접 수정 시). Phase 10: Iterate.</p>
 
-  <h3>Sprint Loop (Phase 6)</h3>
+  <h3>Sprint Loop (Phase 7)</h3>
   <div class="diagram">
     <div class="diagram-title">Implement &rarr; Review &rarr; QA</div>
     <pre class="mermaid">
@@ -1737,7 +1738,7 @@ flowchart LR
   <div class="comparison">
     <div class="comp-col">
       <h4 style="color:var(--accent)">User Sees: Skills (Phase-based)</h4>
-      <p>/harness:brainstorm &rarr; /harness:spec &rarr; /harness:architect &rarr; /harness:plan &rarr; /harness:implement &rarr; /harness:review &rarr; /harness:qa</p>
+      <p>/harness:brainstorm &rarr; /harness:scope &rarr; /harness:spec &rarr; /harness:architect &rarr; /harness:plan &rarr; /harness:implement &rarr; /harness:review &rarr; /harness:qa</p>
     </div>
     <div class="comp-col">
       <h4 style="color:var(--purple)">Internal: Agents (Role-based)</h4>

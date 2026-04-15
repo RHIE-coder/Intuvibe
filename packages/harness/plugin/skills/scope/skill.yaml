@@ -1,0 +1,5 @@
+name: scope
+description: "제품/프로젝트의 전체 기능 범위(scope)를 정의합니다. Domain과 Section을 확정하여 00-overview.md를 생성합니다."
+usage: "/harness:scope [--from-brainstorm]"
+category: workflow
+phase: scope

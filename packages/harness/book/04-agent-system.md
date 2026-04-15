@@ -10,7 +10,7 @@
 
 ```
 사용자가 보는 것 (단계 기반 — Skill):
-  /harness:brainstorm → /harness:spec → /harness:architect → /harness:plan → /harness:implement → /harness:review → /harness:qa
+  /harness:brainstorm → /harness:scope → /harness:spec → /harness:architect → /harness:plan → /harness:implement → /harness:review → /harness:qa
 
 내부에서 동작하는 것 (역할 기반 — Agent):
   explorer, implementer, reviewer-*, test-strategist, verifier, architect, ...
@@ -132,21 +132,21 @@ reviewer-quality가 검사하는 것:
 - **S** = Support (보조 참여)
 - **·** = 미참여
 
-| 에이전트 \\ Phase | brainstorm | spec | architect | plan | implement | review | qa | refactor ⟲ |
-|------------------|:---:|:----:|:---------:|:----:|:---------:|:------:|:--:|:---:|
-| explorer | · | S | S | S | S | S | · | S |
-| requirements-analyst | S | **P** | · | · | · | · | · | · |
-| devils-advocate | S | S | S | · | · | · | · | · |
-| domain-expert *(user persona)* | S | S | S | · | · | S | · | · |
-| architect | · | · | **P** | S | · | · | · | S *(large)* |
-| test-strategist | · | S | · | · | **P** (Test-First) | · | S | S *(medium)* |
-| implementer | · | · | · | · | **P** | · | · | **P** *(mode: refactor)* |
-| verifier | · | · | · | · | S | · | S | S |
-| reviewer-security | · | · | · | · | · | **P** | S | · |
-| reviewer-performance | · | · | · | · | · | **P** | S | **P** |
-| reviewer-quality | · | · | · | · | · | **P** | · | **P** |
-| reviewer-spec | · | S | · | · | · | **P** | S | · *(spec 불변 — script로 보증)* |
-| qa-engineer | · | · | · | · | · | · | **P** | · |
+| 에이전트 \\ Phase | brainstorm | scope | spec | architect | plan | implement | review | qa | refactor ⟲ |
+|------------------|:---:|:----:|:----:|:---------:|:----:|:---------:|:------:|:--:|:---:|
+| explorer | · | · | S | S | S | S | S | · | S |
+| requirements-analyst | S | S | **P** | · | · | · | · | · | · |
+| devils-advocate | S | S | S | S | · | · | · | · | · |
+| domain-expert *(user persona)* | S | S | S | S | · | · | S | · | · |
+| architect | · | · | · | **P** | S | · | · | · | S *(large)* |
+| test-strategist | · | · | S | · | · | **P** (Test-First) | · | S | S *(medium)* |
+| implementer | · | · | · | · | · | **P** | · | · | **P** *(mode: refactor)* |
+| verifier | · | · | · | · | · | S | · | S | S |
+| reviewer-security | · | · | · | · | · | · | **P** | S | · |
+| reviewer-performance | · | · | · | · | · | · | **P** | S | **P** |
+| reviewer-quality | · | · | · | · | · | · | **P** | · | **P** |
+| reviewer-spec | · | · | S | · | · | · | **P** | S | · *(spec 불변 — script로 보증)* |
+| qa-engineer | · | · | · | · | · | · | · | **P** | · |
 
 **읽는 법:**
 - 한 **Phase**의 세로열을 보면 그 Phase에서 동작하는 에이전트 전체가 나옴
@@ -420,7 +420,7 @@ Value Object 관점에서 판단한다.
 3. ubiquitous-language-consistency
 
 ## 참여 단계
-brainstorm, spec, architect, review
+brainstorm, scope, spec, architect, review
 ```
 
 **방법 3: 템플릿 기반 생성**
@@ -445,7 +445,7 @@ brainstorm, spec, architect, review
   1. 유저 질문 단계:
      - 어느 도메인/역할입니까? (예: "React 성능", "SaaS 과금 전문가")
      - 주요 관점은 무엇입니까? (3-5개)
-     - 어느 단계에 참여해야 합니까? (brainstorm/spec/architect/review)
+     - 어느 단계에 참여해야 합니까? (brainstorm/scope/spec/architect/review)
      - 참고할 표준/문서가 있습니까? (OWASP, Clean Code, DDD 등)
      - 모델 선호: haiku | sonnet | opus (기본 sonnet)
 

@@ -122,7 +122,19 @@ book/ → PLAN.md → bench/ → plugin/ → git tag
 |------|------|
 | 변경 기준 | spec과 test를 먼저 작성한 뒤 plugin/ 코드를 수정 |
 | 구조 변경 | plugin.json, settings.json, hooks.json 변경 시 book/ 갱신 |
+| **파이프라인 완결** | 스킬·스크립트·기능 추가/변경 시 **반드시** book/ → bench/ → plugin/ 전체를 갱신한다. plugin/ 파일만 만들고 끝내는 것은 금지. 아래 체크리스트 참조 |
 | 참조 금지 | plugin/은 bench/, book/을 참조하지 않는다. 역방향만 허용 |
+
+### plugin/ 변경 시 파이프라인 체크리스트
+
+plugin/에 변경이 발생하면 아래 항목을 **모두** 확인하고, 해당하는 것은 같은 작업 내에서 갱신한다.
+
+| # | 확인 대상 | 예시 |
+|---|----------|------|
+| 1 | **book/** — 관련 설계 문서 | workflow 순서, skill catalog, agent matrix, state schema, dashboard, CLI reference |
+| 2 | **bench/specs/** — 인수 조건 명세 | 새 스킬이면 `{skill}-skill.spec.yaml` 필요 여부 |
+| 3 | **bench/tests/** — 결정론적 테스트 | 새 스크립트의 exit code, 출력 포맷 검증 |
+| 4 | **gap 검증** — book/과 plugin/ 괴리 없음 | phase enum, 카탈로그 테이블, Mermaid 다이어그램 등 |
 
 ---
 

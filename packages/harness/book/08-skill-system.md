@@ -115,7 +115,7 @@ disable-model-invocation: false   # true면 Claude 자동 호출 차단 (수동 
   → 완료
 ```
 
-**해당 스킬:** init, brainstorm, spec, architect, ux, plan, implement, review, qa, deploy, sync, mode, refactor
+**해당 스킬:** init, brainstorm, scope, spec, architect, ux, plan, implement, review, qa, deploy, sync, mode, refactor
 
 ### 3.2 복합 스킬 (Compound Skill / Git-Style Group)
 
@@ -244,6 +244,7 @@ SKILL.md 로드
 | 스킬 | 에이전트 | 핵심 패턴 |
 |------|---------|----------|
 | `/harness:brainstorm` | devils-advocate | 적대적 사고로 아이디어 검증 |
+| `/harness:scope` | requirements-analyst, devils-advocate | 요구사항을 Domain/Section으로 구조화, 범위 공격 |
 | `/harness:spec` | explorer | 기존 코드/요구사항 탐색 → spec 초안 |
 | `/harness:architect` | architect | ADR 생성, 제약 검증 |
 | `/harness:plan` | explorer → test-strategist | spec 분석 → 태스크 분해 |
@@ -274,6 +275,7 @@ SKILL.md에서 에이전트를 호출할 때의 규약:
 |------|------|------|--------|------|
 | `/harness:init` | simple | all | 없음 | 프로젝트 초기 구성 |
 | `/harness:brainstorm` | simple | std, proto | 없음 | 아이디어 탐색 + 적대적 검증 |
+| `/harness:scope` | simple | std, proto | 없음 | 제품 전체 범위 정의 (Domain & Section Map) |
 | `/harness:spec` | simple | std, proto | 없음 | 기능 명세 (AC 정의) |
 | `/harness:architect` | simple | std | spec | 시스템 아키텍처 (ADR) |
 | `/harness:ux` | simple | std | spec | UI/UX 설계 (Architect와 직교) |
