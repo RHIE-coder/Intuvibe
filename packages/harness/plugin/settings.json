@@ -1,10 +1,10 @@
 {
   "plugin": {
     "name": "intuvibe-harness",
-    "version": "0.1.2"
+    "version": "0.2.0"
   },
   "harness": {
-    "version": "0.1.2",
+    "version": "0.2.0",
     "safety": {
       "block_destructive": true,
       "block_force_push": true,
