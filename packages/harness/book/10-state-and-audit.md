@@ -1,6 +1,6 @@
 # 10. State & Audit — 상태 관리 & 관측성
 
-> **반복 등장 용어:** `Event Sourcing`(이벤트 스트림을 append하고 fold하여 현재 상태를 도출하는 패턴), `Single Writer`(`.harness/state/` 쓰기를 단일 경로로 일원화하는 동시성 모델), `Audit Log`(자동 판단의 역추적용 append-only JSONL). 표준 정의는 [00-overview.md#용어집](00-overview.md#용어집-glossary).
+> **반복 등장 용어:** `Event Sourcing`(이벤트 스트림을 append하고 fold하여 현재 상태를 도출하는 패턴), `Single Writer`(`.harness/state/` 쓰기를 단일 경로로 일원화하는 동시성 모델), `Audit Log`(자동 판단의 역추적용 append-only JSONL), `Trace Stream`(session-scoped 런타임 메커니즘 트레이스). 표준 정의는 [00-overview.md#용어집](00-overview.md#용어집-glossary).
 
 ---
 
@@ -15,9 +15,11 @@
 ├── coverage-report.json       ← 다축 Coverage 통합 레포트
 ├── coverage-trend.json        ← 이터레이션별 각 축 값 추이
 ├── qa-attribution.json        ← QA Stack 실패 귀인 리포트
-├── events/                    ← Event stream (append-only)
+├── events/                    ← Event stream (feature lifecycle, append-only)
 │   └── {domain}/{feature}/
 │       └── {YYYY-MM}.jsonl
+├── traces/                    ← Trace stream (session 런타임 메커니즘, append-only)
+│   └── {session_id}.jsonl
 ├── snapshots/                 ← Aggregate별 상태 snapshot (성능용)
 │   └── {domain}/{feature}.json
 ├── audit.jsonl                ← 자동 판단 감사 로그
@@ -27,6 +29,35 @@
 │   └── {YYYY-MM-DD}-{slug}.md
 └── index.json                 ← stream 목록 · 최신 seq 번호
 ```
+
+### 1.1 3개 이벤트 스트림의 역할 구분
+
+하네스는 세 개의 **orthogonal한 append-only JSONL 스트림**으로 관측성을 구성한다. 같은 물리적 사건이라도 다른 층위에서 기록된다.
+
+| 스트림 | 목적 | 위치 | Writer | 단위 |
+|---|---|---|---|---|
+| **Audit Log** | 자동 판단 이력 (왜 이 결정이 내려졌나) | `audit.jsonl` | `audit-append.mjs` | 정책 판단 |
+| **Event Stream** | Feature 라이프사이클 (어떤 phase를 거쳤나) | `events/{domain}/{feature}/{YYYY-MM}.jsonl` | `event-emit.mjs` | 도메인 집계 |
+| **Trace Stream** | 런타임 메커니즘 (무엇이 발화했나) | `traces/{session_id}.jsonl` | `trace-emit.mjs` | 세션 타임라인 |
+
+**같은 사건이 각 스트림에 다르게 기록되는 예시** — "auth/login feature의 spec이 만들어짐":
+
+```jsonc
+// audit.jsonl (정책)
+{ "event": "spec_validated", "rule_id": "spec:testable-check", "decision": "pass" }
+
+// events/auth/login/2026-04.jsonl (도메인)
+{ "type": "SpecCreated", "payload": { "domain": "auth", "feature": "login" } }
+
+// traces/session-abc123.jsonl (메커니즘)
+{ "kind": "tool_pre", "tool": "Write", "data": { "path": ".harness/specs/auth/login.spec.yaml" } }
+```
+
+**설계 원칙:**
+
+- **snapshot fold 대상은 event뿐** — audit와 trace는 append 전용, fold로 workflow.json을 재구성하지 않음
+- **trace는 session 단위** — 세션 종료 시 독립 파일로 완결. 도메인 집계나 정책 추적과 무관
+- **셋 다 Event Sourcing 철학 공유** — append-only, `v` 필드 + upcaster, flock 직렬화
 
 ---
 
@@ -333,11 +364,149 @@ audit:
 
 ---
 
-## 6. Compact Recovery
+## 6. Trace Stream
+
+### 6.1 목적
+
+하네스가 **"세션 런타임에 무엇이 발화했는가"** 를 session-scoped append-only JSONL로 기록. Audit Log·Event Stream과 직교하는 세 번째 관측 레이어로, inspector(`apps/inspector/`)가 이 스트림을 타임라인으로 시각화한다.
+
+**질문 영역 대응:**
+
+| 질문 | 스트림 |
+|---|---|
+| "왜 이 판단이?" | Audit Log |
+| "이 feature는 지금 어느 phase?" | Event Stream |
+| "이번 세션에 어떤 hook/tool/agent가 호출됐나?" | **Trace Stream** |
+
+### 6.2 저장 구조
+
+```
+.harness/state/traces/
+├── {session_id}.jsonl         ← 세션별 단일 파일 (live)
+├── _unknown-session.jsonl     ← session_id 누락 시 fallback
+└── (archive 정책 미정 — P3에서 결정)
+```
+
+**세션별 1파일 원칙:**
+- 세션이 끝나도 파일은 유지 (inspector가 과거 세션도 조회)
+- 세션 간 writer 충돌 없음 (그래도 flock 적용 — defensive)
+- session_id 누락은 예외 케이스이므로 별도 fallback 파일에 수집
+
+### 6.3 레코드 스키마 (v1)
+
+```jsonc
+{
+  "v": 1,                                    // 스키마 버전 (upcaster 대상)
+  "ts": "2026-04-19T10:23:45.123Z",         // 타임스탬프
+  "session_id": "abc-123",                   // Claude Code hook payload에서 추출
+  "turn": 3,                                 // optional — UserPromptSubmit 카운터
+  "span_id": "span-a1b2c3d4",               // 이 이벤트의 고유 ID
+  "parent_span_id": null,                    // 중첩 추적 (tool_post ← tool_pre 등)
+  "kind": "tool_pre",                        // enum: §6.4
+  "source": "PreToolUse",                    // 어느 hook 이벤트에서 발생했나
+  "tool": "Bash",                            // tool 관련 kind일 때만
+  "producer": "scripts/trace/emit-tool-pre.mjs", // 발행 주체
+  "data": { /* kind-specific payload */ }
+}
+```
+
+### 6.4 kind enum
+
+| kind | 언제 | data 구조 |
+|---|---|---|
+| `tool_pre` | PreToolUse wildcard | `{ input, isolation?, subagent_type? }` (Task 시 subagent_type 보존) |
+| `tool_post` | PostToolUse wildcard | `{ exit_code, duration_ms, output_summary? }` |
+| `hook` | 개별 hook script 자신의 발화 (block, audit, gate 판정 등) | `{ script, result: "pass"\|"block"\|"warn", reason? }` |
+| `snapshot` | SessionStart 정적 컨텍스트 | `{ rules_active, skills, mcp_servers, output_style, harness_version }` |
+| `prompt` | UserPromptSubmit 원본 | `{ original }` |
+| `prompt_transformed` | `auto-transform.mjs` 이후 | `{ original, transformed, rules_applied, diff? }` |
+| `turn_start` / `turn_end` | 턴 경계 | `{ turn_n, duration_ms? }` |
+
+### 6.5 불변식 (Trace Iron Law)
+
+| 불변식 | 설명 |
+|--------|------|
+| **append-only** | Audit Log와 동일. 기존 엔트리 수정·삭제 금지 |
+| **flock 직렬화** | `trace-emit.mjs`가 `flock.mjs` 재사용 |
+| **silent-skip** | `.harness/` 없는 프로젝트 → exit(0). 다른 state 스크립트와 일관 |
+| **non-blocking** | Trace emitter의 실패가 **tool 실행을 막지 않는다**. exit 1이어도 Claude Code는 작업 계속 |
+| **size bounded** | 이벤트 직렬화 >64KB면 큰 필드 truncate + `data.truncated=true` |
+| **PII 처리는 소비자 책임** | trace는 원본을 보존. 마스킹은 inspector/exporter 단계 |
+
+### 6.6 Audit Log와의 차이
+
+| 축 | Audit Log | Trace Stream |
+|---|---|---|
+| 목적 | 정책 판단 역추적 | 실행 타임라인 복원 |
+| 단위 | 단일 결정 | 세션 전체 |
+| 파일 구조 | 단일 파일 + 월별 회전 | 세션별 파일 |
+| 소비자 | `/harness:sync`, 규정 감사 | `apps/inspector` |
+| 비활성화 | `audit.enabled: false` | `observability.trace.enabled: false` (P3에서 config 추가) |
+| 보존 정책 | `retention_days: 90` | P3에서 결정 (archive or delete) |
+
+### 6.7 Writer — `trace-emit.mjs`
+
+**호출 방식:**
+
+```bash
+# stdin JSON
+echo '{"kind":"tool_pre","tool":"Bash","session_id":"abc","data":{"input":{"command":"ls"}}}' \
+  | node trace-emit.mjs
+
+# CLI 인자
+node trace-emit.mjs --kind tool_pre --session-id abc --tool Bash
+```
+
+**자동 주입:**
+- `v`: 미제공 시 1
+- `ts`: 미제공 시 ISO now
+- `span_id`: 미제공 시 `span-{random hex}`
+- `producer`: 미제공 시 환경변수 `HARNESS_PRODUCER` 또는 `"unknown"`
+
+**Config (Phase 3에서 추가):**
+
+```yaml
+# .harness/config.yaml
+observability:
+  trace:
+    enabled: true
+    path: .harness/state/traces           # 기본
+    max_event_bytes: 65536                # 64KB size guard
+    redact_fields: []                     # inspector에서 처리 권장
+```
+
+### 6.8 Wrapper Scripts — Hook → trace-emit 어댑터
+
+`trace-emit.mjs`는 writer다. **수집(collection)** 은 얇은 어댑터 스크립트가 맡는다. 각 wrapper는 Claude Code가 주입한 hook stdin payload(JSON)를 읽어 `writeTraceRecord()`를 호출한다.
+
+```
+plugin/scripts/trace/
+├── emit-tool-pre.mjs              ← PreToolUse wildcard.   kind=tool_pre,  source=PreToolUse
+├── emit-tool-post.mjs             ← PostToolUse wildcard.  kind=tool_post, source=PostToolUse
+├── emit-session-snapshot.mjs      ← SessionStart.          kind=snapshot,  source=SessionStart
+├── emit-prompt.mjs                ← UserPromptSubmit 선두. kind=prompt,    source=UserPromptSubmit
+├── emit-prompt-transformed.mjs    ← UserPromptSubmit 말미. kind=prompt_transformed
+└── emit-stop.mjs                  ← Stop 선두.             kind=stop,      source=Stop
+```
+
+| 규칙 | 의미 |
+|------|------|
+| **Non-blocking** | 모든 wrapper는 `exit(0)` 만 반환. LLM이 signal할 실패 없음. 내부 에러도 stderr로만 기록 |
+| **Single process** | wrapper가 `trace-emit.mjs`를 subprocess로 재실행하지 않고 `writeTraceRecord` 함수를 import. 이중 fork 회피(<20ms p95 목표) |
+| **session_id source** | Claude Code stdin payload의 `session_id` 필드. 없으면 trace-emit writer가 `_unknown-session`으로 fallback |
+| **Silent-skip** | `.harness/` 미존재 프로젝트에서는 writer가 자체 skip. wrapper는 단순히 호출만 |
+
+**Prompt pair 배치:** UserPromptSubmit 체인은 `emit-prompt` (pipeline 진입 전 원본) → gate/quality/auto-transform → `emit-prompt-transformed` (최종 결과) 순서. Inspector가 두 이벤트를 span_id + parent_span_id 로 연결하여 변환 diff를 렌더한다.
+
+**Stop 경계:** Stop 체인은 `emit-stop` (관측) → `update-workflow` (상태 저장) 순서. Trace가 상태 저장보다 먼저 실행되어야 관측 누락이 없다. Lifecycle 다이어그램은 `kind=stop` 레코드 유무로 세션 정상 종료 여부를 점등한다.
+
+---
+
+## 7. Compact Recovery
 
 Claude Code의 context window가 가득 차면 **Compact** (대화 압축)이 발생한다. 이때 LLM 컨텍스트 내의 워크플로우 상태 정보가 소실될 수 있다.
 
-### 6.1 복구 메커니즘
+### 7.1 복구 메커니즘
 
 ```
 Compact 발생
@@ -356,7 +525,7 @@ Compact 발생
         "compact 후 복원됨. 현재 phase: implement, 다음: /harness:review"
 ```
 
-### 6.2 Compact에 영향받는 것 / 받지 않는 것
+### 7.2 Compact에 영향받는 것 / 받지 않는 것
 
 | 항목 | Compact 후 | 방어 |
 |------|-----------|------|
@@ -366,7 +535,7 @@ Compact 발생
 | Config | 디스크 존재 | 재로드 복원 |
 | 대화 내 중간 결과 | **소실** | workflow.json + events에서 핵심 상태 재구축 |
 
-### 6.3 Snapshot 손상 복구 흐름
+### 7.3 Snapshot 손상 복구 흐름
 
 ```
 workflow.json 로드 실패 또는 v 불일치
@@ -380,9 +549,9 @@ workflow.json 로드 실패 또는 v 불일치
 
 ---
 
-## 7. 관측성 도구
+## 8. 관측성 도구
 
-### 7.1 엔트로피 스윕 (`/harness:sync`)
+### 8.1 엔트로피 스윕 (`/harness:sync`)
 
 `/harness:sync --schedule weekly`로 주기적 감사:
 - 문서 일관성 (spec↔plan↔code)
@@ -393,7 +562,7 @@ workflow.json 로드 실패 또는 v 불일치
 
 결과: `.harness/state/entropy-report.jsonl` + `entropy_sweep_*` audit 이벤트
 
-### 7.2 Coverage Trend
+### 8.2 Coverage Trend
 
 `scripts/qa/coverage-trend.mjs`가 이터레이션 간 각 축의 delta를 계산:
 
@@ -414,7 +583,7 @@ workflow.json 로드 실패 또는 v 불일치
 }
 ```
 
-### 7.3 QA Attribution
+### 8.3 QA Attribution
 
 QA Stack의 bottom-up 실행 결과를 계층별로 귀인:
 - `failed_layer`: 어느 계층에서 실패했는가
@@ -430,6 +599,7 @@ QA Stack의 bottom-up 실행 결과를 계층별로 귀인:
 - [02-architecture.md §3.0](02-architecture.md) — Feature = Aggregate, 일관성 규칙
 - [02-architecture.md §7.5](02-architecture.md) — Single Writer 상세, 강제 메커니즘
 - [05-project-structure.md §5](05-project-structure.md) — State 파일 매핑 규칙, Upcaster 상세
-- [07-hooks-system.md](07-hooks-system.md) — SessionStart compact-recovery, Stop update-workflow
+- [07-hooks-system.md](07-hooks-system.md) — SessionStart compact-recovery, Stop update-workflow, PreToolUse/PostToolUse trace emitter (P2)
 - [09-script-system.md §6](09-script-system.md) — Audit Event 공통 스키마, 이벤트 타입 카탈로그
-- [00-overview.md Glossary](00-overview.md) — Audit Log 이벤트 정의, Config 참조
+- [00-overview.md Glossary](00-overview.md) — Audit Log · Event Stream · Trace Stream · Config 참조
+- `../PLAN.md` v0.3.0 — Observability Layer 구현 사이클 (trace-emit → hook wiring → apps/inspector)

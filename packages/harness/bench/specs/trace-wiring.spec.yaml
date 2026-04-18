@@ -1,0 +1,93 @@
+id: SPEC-trace-wiring
+name: Trace Wiring — Hook Payload → trace-emit Adapters
+version: 1
+layer: observability
+description: >
+  Claude Code의 hook stdin payload (PreToolUse, PostToolUse, SessionStart,
+  UserPromptSubmit) 를 읽어 trace-emit.mjs 의 writeTraceRecord() 로 전달하는
+  얇은 adapter scripts. 모든 wrapper 는 차단하지 않는다 (exit(0) only).
+  SPEC-trace-emit 의 writer 계약 위에 "수집" 계약을 더한다.
+depends_on:
+  - SPEC-trace-emit
+
+acceptance_criteria:
+  - id: AC-TW01
+    desc: "emit-tool-pre: PreToolUse payload → kind=tool_pre, source=PreToolUse 레코드"
+    testable: >
+      stdin {"session_id":"s1","tool_name":"Bash","tool_input":{"command":"ls"}}
+      → traces/s1.jsonl 에 {kind:"tool_pre", source:"PreToolUse", tool:"Bash",
+      data:{input:{command:"ls"}}} 레코드
+
+  - id: AC-TW02
+    desc: "emit-tool-post: PostToolUse payload → kind=tool_post, tool_response 보존"
+    testable: >
+      stdin {"session_id":"s1","tool_name":"Bash","tool_response":{"stdout":"...","exit_code":0}}
+      → traces/s1.jsonl 에 {kind:"tool_post", source:"PostToolUse",
+      data:{response:{stdout:"...",exit_code:0}}} 레코드
+
+  - id: AC-TW03
+    desc: "emit-session-snapshot: SessionStart 정적 컨텍스트(rules/skills/mcp) 수집"
+    testable: >
+      tmp project 에 .harness/, plugin skills/, mcp settings 배치 후
+      stdin {"session_id":"s2","cwd":"/tmp/proj"} 전달
+      → traces/s2.jsonl 에 {kind:"snapshot", source:"SessionStart",
+      data:{rules:[...], skills:[...], mcp_servers:[...]}} 레코드 1건
+
+  - id: AC-TW04
+    desc: "emit-prompt: UserPromptSubmit 원본 프롬프트 기록 (pipeline 진입 전)"
+    testable: >
+      stdin {"session_id":"s3","prompt":"구현 도와줘"}
+      → traces/s3.jsonl 에 {kind:"prompt", source:"UserPromptSubmit",
+      data:{original:"구현 도와줘"}}
+
+  - id: AC-TW05
+    desc: "emit-prompt-transformed: UserPromptSubmit 종료 시 변환 결과 기록"
+    testable: >
+      stdin {"session_id":"s3","prompt":"긴급 배포 해줘"}
+      → traces/s3.jsonl 에 {kind:"prompt_transformed",
+      data:{final:"...", matches:[...]}} (auto-transform lexicon 매치 여부 반영)
+
+  - id: AC-TW06
+    desc: ".harness/ 미존재 → 모든 wrapper silent-skip"
+    testable: >
+      .harness/ 없는 tmp dir 에서 각 wrapper 실행 → exit(0), 파일 생성 없음,
+      stderr 깨끗 (writer 계약 재사용)
+
+  - id: AC-TW07
+    desc: "wrapper 실패에도 exit(0) — tool 실행 차단 금지"
+    testable: >
+      잘못된 JSON stdin, 누락 필드, 내부 throw 모든 경우에 exit(0).
+      stderr 에 경고 기록은 허용, process 종료는 항상 성공 코드
+
+  - id: AC-TW08
+    desc: "MCP 도구명(mcp__server__tool) 보존"
+    testable: >
+      stdin {"session_id":"s4","tool_name":"mcp__paper__get_basic_info","tool_input":{...}}
+      → 기록된 레코드의 tool 필드가 "mcp__paper__get_basic_info" (원형 유지)
+
+  - id: AC-TW09
+    desc: "Task(subagent) 도구 호출의 subagent_type·prompt 보존"
+    testable: >
+      stdin {"session_id":"s5","tool_name":"Task",
+        "tool_input":{"subagent_type":"Explore","prompt":"find X"}}
+      → data.input 에 subagent_type="Explore", prompt="find X" 모두 보존
+
+  - id: AC-TW10
+    desc: "session_id 누락 시 writer fallback 사용 (_unknown-session.jsonl)"
+    testable: >
+      stdin {"tool_name":"Bash","tool_input":{"command":"ls"}} (session_id 없음)
+      → _unknown-session.jsonl 에 기록, 레코드의 session_id="_unknown"
+
+  - id: AC-TW11
+    desc: "wrapper 는 writeTraceRecord 를 직접 import (subprocess 재생성 금지)"
+    testable: >
+      trace wrapper 파일들을 정적 검사 → child_process.spawn/execFile 로
+      trace-emit.mjs 를 호출하는 패턴이 없음. writeTraceRecord import 필수
+
+  - id: AC-TW12
+    desc: "emit-stop: Stop hook → kind=stop 레코드로 세션 종료 경계 표시"
+    testable: >
+      stdin {"session_id":"s6","stop_hook_active":false} → traces/s6.jsonl 에
+      {kind:"stop", source:"Stop", data:{stop_hook_active:false}} 레코드 1건.
+      Lifecycle 다이어그램이 Stop 노드를 점등할 근거가 된다.
+      .harness/ 미존재·invalid stdin 에도 exit(0) (AC-TW06/07 재사용).

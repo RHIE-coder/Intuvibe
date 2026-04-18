@@ -1,0 +1,84 @@
+id: SPEC-trace-emit
+name: Trace Emit — Session Runtime Trace Writer
+version: 1
+layer: observability
+description: >
+  세션 런타임 메커니즘(hook 발화, tool 호출, agent fork, worktree 생성 등)을
+  session-scoped append-only JSONL로 기록하는 writer.
+  audit.jsonl(정책)·events/(feature lifecycle)과 직교하는 3번째 스트림.
+  apps/inspector가 이 스트림을 타임라인으로 시각화한다.
+
+acceptance_criteria:
+  - id: AC-TR01
+    desc: "CLI 인자로 이벤트 기록 → traces/{session_id}.jsonl 생성"
+    testable: >
+      trace-emit.mjs --kind tool_pre --session-id abc --tool Bash
+      → .harness/state/traces/abc.jsonl 생성, 레코드 1건, kind=tool_pre
+
+  - id: AC-TR02
+    desc: "stdin JSON으로 이벤트 기록"
+    testable: >
+      echo '{"kind":"tool_pre","session_id":"abc","tool":"Write"}' | trace-emit.mjs
+      → traces/abc.jsonl에 동일 레코드
+
+  - id: AC-TR03
+    desc: "ts 미제공 시 ISO 타임스탬프 자동 주입"
+    testable: >
+      ts 필드 없이 이벤트 전달 → 기록된 레코드에 ts가 유효한 ISO 문자열
+
+  - id: AC-TR04
+    desc: "span_id 미제공 시 고유 ID 자동 생성"
+    testable: >
+      연속 2회 호출 시 각 레코드의 span_id가 서로 다름 (span-prefix + hex)
+
+  - id: AC-TR05
+    desc: "schema version v 미제공 시 1 자동 주입"
+    testable: "v 없이 이벤트 전달 → 기록된 레코드에 v=1"
+
+  - id: AC-TR06
+    desc: "동시 10회 호출 → JSONL 줄 수 = 10, 전부 파싱 성공"
+    testable: >
+      execFile 10회 병렬 실행 후 traces/{session_id}.jsonl 줄 수 = 10,
+      각 줄이 유효한 JSON, flock 직렬화로 race 없음
+
+  - id: AC-TR07
+    desc: "data 직렬화 >64KB → truncate + data.truncated=true"
+    testable: >
+      data.input에 80KB 문자열 포함 → 기록된 레코드의 data.truncated=true,
+      원본 큰 필드는 TRUNCATED 마커로 대체
+
+  - id: AC-TR08
+    desc: ".harness/ 없는 프로젝트에서 silent-skip"
+    testable: >
+      .harness/ 디렉토리 미존재 프로젝트 → exit(0), stderr 빈 메시지,
+      파일 생성 없음
+
+  - id: AC-TR09
+    desc: "session_id 누락 시 _unknown-session.jsonl로 fallback"
+    testable: >
+      session_id 없는 이벤트 → traces/_unknown-session.jsonl에 기록,
+      레코드의 session_id 필드는 '_unknown'
+
+  - id: AC-TR10
+    desc: "잘못된 JSON stdin → exit(1)"
+    testable: "stdin에 invalid JSON 전달 → exit(1), stderr에 파싱 에러 메시지"
+
+  - id: AC-TR11
+    desc: "HARNESS_PRODUCER 환경변수 → producer 필드 반영"
+    testable: >
+      HARNESS_PRODUCER=test-producer 설정 후 이벤트 emit
+      → 기록된 레코드의 producer='test-producer'
+
+  - id: AC-TR12
+    desc: "parent_span_id 값을 보존 (중첩 추적)"
+    testable: >
+      parent_span_id='parent-xyz' 포함 이벤트 emit
+      → 기록된 레코드의 parent_span_id='parent-xyz'
+
+  - id: AC-TR13
+    desc: "kind 필드 필수 — 누락 시 exit(1)"
+    testable: "kind 없는 이벤트 → exit(1), stderr에 필수 필드 메시지"
+
+  - id: AC-TR14
+    desc: "빈 stdin은 no-op exit(0)"
+    testable: "stdin에 빈 문자열 → exit(0), 파일 생성 없음"

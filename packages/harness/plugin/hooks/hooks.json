@@ -19,11 +19,24 @@
           {
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/workflow/determine-mode.mjs"
+          },
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/trace/emit-session-snapshot.mjs"
           }
         ]
       }
     ],
     "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/trace/emit-tool-pre.mjs"
+          }
+        ]
+      },
       {
         "matcher": "Bash",
         "hooks": [
@@ -53,6 +66,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/trace/emit-prompt.mjs"
+          },
+          {
+            "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/gates/gate-engine.mjs"
           },
           {
@@ -66,11 +83,24 @@
           {
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/workflow/route-hint.mjs"
+          },
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/trace/emit-prompt-transformed.mjs"
           }
         ]
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/trace/emit-tool-post.mjs"
+          }
+        ]
+      },
       {
         "matcher": "Bash",
         "hooks": [
@@ -94,6 +124,10 @@
       {
         "matcher": "",
         "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/trace/emit-stop.mjs"
+          },
           {
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/state/update-workflow.mjs"
