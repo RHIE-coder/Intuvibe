@@ -38,6 +38,8 @@ claude plugin marketplace remove intuvibe
 |----------|------|------|
 | `intuvibe-harness` | 0.3.0 | Agentic engineering harness — 워크플로우, 가드레일, 품질 파이프라인, trace observability |
 
+**처음 쓰시나요?** [`packages/harness/guide/`](packages/harness/guide/README.md) 에서 mermaid 다이어그램과 함께 설치·워크플로우·모드·옵저버빌리티를 한 번에 볼 수 있습니다.
+
 ## Inspector (옵션)
 
 훅이 기록한 trace 를 브라우저에서 관찰하는 로컬 웹 UI.

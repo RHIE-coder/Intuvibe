@@ -2,11 +2,15 @@
 
 Claude Code 기반 agentic engineering harness 패키지다.
 
+> **처음이라면 → [guide/README.md](guide/README.md)**  
+> 설치·첫 세션·워크플로우 전체를 mermaid 다이어그램으로 정리한 사용 가이드. 설계 의도는 [`book/`](book/), 기여자용 관리 규칙은 [`CONVENTIONS.md`](CONVENTIONS.md).
+
 ## 구조
 
 ```text
 packages/harness/
 ├── book/                 # 단일 진실 — 설계 의도 + 현재 형상
+├── guide/                # 사용 가이드 (mermaid + 워크플로우)
 ├── bench/                # 검증
 │   ├── specs/            # 인수 조건 명세 (spec ↔ test 1:1)
 │   ├── tests/            # 결정론적 node:test
