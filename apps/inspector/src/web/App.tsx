@@ -5,6 +5,10 @@ import { TabBar } from './components/TabBar.js';
 import { SessionList } from './components/SessionList.js';
 import { Timeline } from './components/Timeline.js';
 import { SpanDetail } from './components/SpanDetail.js';
+import { PromptDiff } from './components/PromptDiff.js';
+import { Snapshot } from './components/Snapshot.js';
+import { SubagentTree } from './components/SubagentTree.js';
+import { Lifecycle } from './components/Lifecycle.js';
 import { useSessions } from './useSessions.js';
 import type { TabId } from './tabs.js';
 import type { TraceRecord } from '../shared/trace.js';
@@ -63,9 +67,6 @@ function renderTabBody(
   selectedSpanId: string | null,
   onSelectSpan: (id: string) => void,
 ) {
-  const stub = (name: string) => (
-    <p className="p-4 text-xs italic text-slate-600">{name} (slice pending)</p>
-  );
   switch (tab) {
     case 'timeline':
       return (
@@ -75,9 +76,9 @@ function renderTabBody(
           onSelectSpan={onSelectSpan}
         />
       );
-    case 'prompt': return stub('Prompt Diff');
-    case 'snapshot': return stub('Snapshot');
-    case 'subagents': return stub('Subagents');
-    case 'lifecycle': return stub('Lifecycle');
+    case 'prompt': return <PromptDiff records={records} />;
+    case 'snapshot': return <Snapshot records={records} />;
+    case 'subagents': return <SubagentTree records={records} />;
+    case 'lifecycle': return <Lifecycle records={records} />;
   }
 }
