@@ -11,6 +11,9 @@
     "inspector": "pnpm --filter @intuvibe/inspector dev",
     "inspector:build": "pnpm --filter @intuvibe/inspector build",
     "inspector:start": "pnpm --filter @intuvibe/inspector start",
-    "harness:test": "cd packages/harness && node --test bench/tests/**/*.test.mjs"
+    "inspector:test": "pnpm --filter @intuvibe/inspector test",
+    "inspector:typecheck": "pnpm --filter @intuvibe/inspector typecheck",
+    "harness:test": "cd packages/harness && node --test bench/tests/**/*.test.mjs",
+    "test": "pnpm harness:test && pnpm inspector:test"
   }
 }
