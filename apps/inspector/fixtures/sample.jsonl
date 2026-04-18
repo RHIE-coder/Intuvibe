@@ -1,0 +1,6 @@
+{"v":1,"ts":"2026-04-19T10:23:45.100Z","session_id":"sample-1","span_id":"sp-001","parent_span_id":null,"kind":"snapshot","source":"SessionStart","producer":"harness","data":{"rules":["harness.md"],"skills":["harness:init","harness:spec"],"mcp_servers":[]}}
+{"v":1,"ts":"2026-04-19T10:23:45.250Z","session_id":"sample-1","span_id":"sp-002","parent_span_id":null,"kind":"prompt","source":"UserPromptSubmit","producer":"harness","data":{"original":"구현 도와줘"}}
+{"v":1,"ts":"2026-04-19T10:23:45.280Z","session_id":"sample-1","span_id":"sp-003","parent_span_id":"sp-002","kind":"prompt_transformed","source":"UserPromptSubmit","producer":"harness","data":{"final":"구현 도와줘","matches":[]}}
+{"v":1,"ts":"2026-04-19T10:23:45.350Z","session_id":"sample-1","span_id":"sp-004","parent_span_id":null,"kind":"tool_pre","source":"PreToolUse","tool":"Bash","producer":"harness","data":{"input":{"command":"ls"}}}
+{"v":1,"ts":"2026-04-19T10:23:45.420Z","session_id":"sample-1","span_id":"sp-005","parent_span_id":"sp-004","kind":"tool_post","source":"PostToolUse","tool":"Bash","producer":"harness","data":{"input":{"command":"ls"},"response":{"stdout":"README.md\npackage.json\n","exit_code":0}}}
+{"v":1,"ts":"2026-04-19T10:23:46.010Z","session_id":"sample-1","span_id":"sp-006","parent_span_id":null,"kind":"stop","source":"Stop","producer":"harness","data":{"stop_hook_active":false}}

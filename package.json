@@ -1,0 +1,16 @@
+{
+  "name": "intuvibe",
+  "private": true,
+  "version": "0.3.0-dev",
+  "description": "intuvibe monorepo — Claude Code harness framework + observability apps",
+  "packageManager": "pnpm@10.8.1",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "inspector": "pnpm --filter @intuvibe/inspector dev",
+    "inspector:build": "pnpm --filter @intuvibe/inspector build",
+    "inspector:start": "pnpm --filter @intuvibe/inspector start",
+    "harness:test": "cd packages/harness && node --test bench/tests/**/*.test.mjs"
+  }
+}
