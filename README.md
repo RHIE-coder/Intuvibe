@@ -38,6 +38,22 @@ claude plugin marketplace remove intuvibe
 |----------|------|------|
 | `intuvibe-harness` | 0.3.0 | Agentic engineering harness — 워크플로우, 가드레일, 품질 파이프라인, trace observability |
 
+## Inspector (옵션)
+
+훅이 기록한 trace 를 브라우저에서 관찰하는 로컬 웹 UI.
+marketplace 에 포함되지 않으며, 레포를 클론해서 별도로 실행한다.
+
+```bash
+git clone https://github.com/rhie-coder/intuvibe
+cd intuvibe && pnpm install
+pnpm inspector    # http://localhost:3030
+
+# 다른 프로젝트의 trace 를 보고 싶으면
+HARNESS_PROJECT_DIR=/path/to/project pnpm inspector
+```
+
+상세는 [apps/inspector/README.md](apps/inspector/README.md).
+
 ## 버전 관리
 
 `git tag`는 마켓플레이스 버전 단위로 관리한다 (예: `v0.1.0`).
@@ -48,6 +64,8 @@ claude plugin marketplace remove intuvibe
 ```text
 .
 ├── .claude-plugin/        # marketplace metadata
+├── apps/
+│   └── inspector/         # 로컬 trace observability Web UI (marketplace 미포함)
 ├── docs/                  # 공용 리서치/리뷰 문서
 └── packages/
     └── harness/           # intuvibe-harness 플러그인 패키지
@@ -60,6 +78,7 @@ claude plugin marketplace remove intuvibe
 
 - marketplace manifest: `.claude-plugin/marketplace.json`
 - plugin source: `packages/harness/plugin`
+- inspector source: `apps/inspector`
 
 패키지 상세는 [packages/harness/README.md](packages/harness/README.md) 참고.
 
