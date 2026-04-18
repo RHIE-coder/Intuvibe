@@ -36,7 +36,7 @@ claude plugin marketplace remove intuvibe
 
 | 플러그인 | 버전 | 설명 |
 |----------|------|------|
-| `intuvibe-harness` | 0.1.0 | Agentic engineering harness — 워크플로우, 가드레일, 품질 파이프라인 |
+| `intuvibe-harness` | 0.2.0 | Agentic engineering harness — 워크플로우, 가드레일, 품질 파이프라인 |
 
 ## 버전 관리
 
@@ -62,3 +62,9 @@ claude plugin marketplace remove intuvibe
 - plugin source: `packages/harness/plugin`
 
 패키지 상세는 [packages/harness/README.md](packages/harness/README.md) 참고.
+
+## 리서치 / 리뷰
+
+- Review index: [docs/review/README.md](docs/review/README.md)
+- Codex CLI quick notes: [docs/review/codex-cli/README.md](docs/review/codex-cli/README.md)
+- OpenAI Codex official docs review: [docs/review/openai-codex/README.md](docs/review/openai-codex/README.md)
