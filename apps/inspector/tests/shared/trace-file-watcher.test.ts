@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { statSync } from 'node:fs';
+import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { randomBytes } from 'node:crypto';
 import {
   TraceFileWatcher,
   type WatcherCallbacks,
@@ -63,11 +65,32 @@ describe('TraceFileWatcher', () => {
   beforeEach(() => { proj = createTmpProject(); });
   afterEach(() => { proj.cleanup(); });
 
-  it('start: 디렉토리 없으면 no-op (throw 안 함)', () => {
+  it('start: 디렉토리 없으면 throw 없이 폴링 대기', () => {
     const cb = createCallbacks();
-    const w = new TraceFileWatcher('/nonexistent/path', cb);
+    const w = new TraceFileWatcher('/nonexistent/path', cb, { pollIntervalMs: 50 });
     expect(() => w.start()).not.toThrow();
     w.stop();
+  });
+
+  it('tracesDir 사후 생성 → 폴링이 감지하고 세션 동기화', async () => {
+    const root = resolve(tmpdir(), `inspector-late-${randomBytes(4).toString('hex')}`);
+    const tracesDir = resolve(root, '.harness/state/traces');
+    const cb = createCallbacks();
+    const w = new TraceFileWatcher(tracesDir, cb, { pollIntervalMs: 30 });
+    w.start();
+    try {
+      const evP = waitForEvent(w, (e) => e.type === 'session_added');
+      // inspector 가 먼저 떠있는 상태에서 대상 프로젝트가 harness init 한 시나리오.
+      mkdirSync(tracesDir, { recursive: true });
+      const record = makeRecord({ session_id: 'late-sess' });
+      writeFileSync(resolve(tracesDir, 'late-sess.jsonl'), JSON.stringify(record) + '\n');
+      const ev = await evP;
+      expect(ev).toEqual({ type: 'session_added', session_id: 'late-sess' });
+      expect(cb.sessions.has('late-sess')).toBe(true);
+    } finally {
+      w.stop();
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it('새 세션 파일 생성 → session_added 이벤트', async () => {

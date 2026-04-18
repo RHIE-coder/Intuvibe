@@ -38,6 +38,9 @@ pnpm start    # dist/ 를 서빙
 
 ## 구조 (flat — Clean Architecture 아님)
 
+> 개발 컨벤션·금기사항·변경 워크플로우는 [CONVENTIONS.md](./CONVENTIONS.md) 참조.
+
+
 ```
 src/
   server/      Express + routes + Vite/static middleware
