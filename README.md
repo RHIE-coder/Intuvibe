@@ -36,7 +36,7 @@ claude plugin marketplace remove intuvibe
 
 | 플러그인 | 버전 | 설명 |
 |----------|------|------|
-| `intuvibe-harness` | 0.2.0 | Agentic engineering harness — 워크플로우, 가드레일, 품질 파이프라인 |
+| `intuvibe-harness` | 0.3.0 | Agentic engineering harness — 워크플로우, 가드레일, 품질 파이프라인, trace observability |
 
 ## 버전 관리
 

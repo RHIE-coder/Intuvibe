@@ -1,7 +1,7 @@
 {
   "name": "@intuvibe/inspector",
   "private": true,
-  "version": "0.3.0-dev",
+  "version": "0.3.0",
   "description": "Local web UI for harness trace observability",
   "type": "module",
   "scripts": {

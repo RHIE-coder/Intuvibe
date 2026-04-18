@@ -10,3 +10,4 @@
 | 0.1.3 | `v0.1.3` | 0.1.3 | init examples rules 위치 수정 (루트 → .claude/rules/) |
 | 0.2.0 | `v0.2.0` | 0.2.0 | /harness:scope 스킬 추가, Phase 구조 개편, CLAUDE.md 도입 |
 | 0.2.1 | `v0.2.1` | 0.2.0 | CLAUDE.md → .claude/rules/ 경로 기반 동적 로딩 구조로 전환 |
+| 0.3.0 | `v0.3.0` | 0.3.0 | Observability layer — trace-emit 스트림, hook wildcard 와이어링, `apps/inspector/` 로컬 Web UI |
