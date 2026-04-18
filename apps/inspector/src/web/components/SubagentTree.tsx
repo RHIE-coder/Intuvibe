@@ -1,4 +1,4 @@
-// components/SubagentTree.tsx — parent_span_id 기반 트리 렌더.
+// components/SubagentTree.tsx — parent_span_id 기반 트리 + Task 도구 특화.
 
 import type { TraceRecord } from '../../shared/trace.js';
 
@@ -24,12 +24,28 @@ export function SubagentTree({ records }: SubagentTreeProps) {
 }
 
 function TreeItem({ node }: { node: TreeNode }) {
-  const { kind, tool, span_id } = node.record;
+  const { record } = node;
+  const isTask = record.tool === 'Task';
+  const subagentType = isTask ? asString(getPath(record.data, ['input', 'subagent_type'])) : null;
   return (
     <li className="my-1">
       <div className="flex items-baseline gap-2">
-        <span className="text-[10px] uppercase text-slate-500">{kind}</span>
-        <span className="font-mono text-slate-200">{tool ?? span_id}</span>
+        <span className="text-[10px] uppercase text-slate-500">{record.kind}</span>
+        {isTask ? (
+          <span
+            data-testid={`task-badge-${record.span_id}`}
+            className="rounded bg-sky-900/50 px-1.5 py-0.5 font-mono text-[10px] text-sky-300"
+          >
+            Task
+          </span>
+        ) : null}
+        {isTask ? (
+          subagentType ? (
+            <span className="font-mono text-slate-200">{subagentType}</span>
+          ) : null
+        ) : (
+          <span className="font-mono text-slate-200">{record.tool ?? record.span_id}</span>
+        )}
       </div>
       {node.children.length > 0 ? (
         <ul className="ml-4 border-l border-slate-800 pl-3">
@@ -64,4 +80,17 @@ function buildTree(records: TraceRecord[]): TreeNode[] {
     if (parent) parent.children = children;
   }
   return roots;
+}
+
+function getPath(obj: unknown, path: string[]): unknown {
+  let cur: unknown = obj;
+  for (const key of path) {
+    if (cur == null || typeof cur !== 'object') return undefined;
+    cur = (cur as Record<string, unknown>)[key];
+  }
+  return cur;
+}
+
+function asString(v: unknown): string | null {
+  return typeof v === 'string' ? v : null;
 }

@@ -52,4 +52,39 @@ describe('<SubagentTree />', () => {
     expect(screen.getByText(/^A$/)).toBeInTheDocument();
     expect(screen.getByText(/^B$/)).toBeInTheDocument();
   });
+
+  it('Task 도구 → subagent_type 표시 + 배지 강조', () => {
+    render(
+      <SubagentTree
+        records={[
+          rec({
+            span_id: 't1',
+            kind: 'tool_pre',
+            tool: 'Task',
+            data: { input: { subagent_type: 'Explore', prompt: '...' } },
+          }),
+          rec({
+            span_id: 'child',
+            parent_span_id: 't1',
+            tool: 'Bash',
+          }),
+        ]}
+      />,
+    );
+    // subagent_type 표시
+    expect(screen.getByText(/Explore/)).toBeInTheDocument();
+    // "Task" 라벨이 subagent badge 로 구분됨
+    expect(screen.getByTestId('task-badge-t1')).toBeInTheDocument();
+  });
+
+  it('Task 도구 subagent_type 없어도 "Task" 자체는 표시', () => {
+    render(
+      <SubagentTree
+        records={[
+          rec({ span_id: 't1', kind: 'tool_pre', tool: 'Task', data: {} }),
+        ]}
+      />,
+    );
+    expect(screen.getByText(/^Task$/)).toBeInTheDocument();
+  });
 });
